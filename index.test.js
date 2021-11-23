@@ -33,6 +33,8 @@ describe("Deploy to ECS", () => {
       .mockReturnValueOnce("task-definition.json") // task-definition
       .mockReturnValueOnce("cluster-789") // cluster
       .mockReturnValueOnce("1") // count
+      .mockReturnValueOnce("EC2") // launch-type
+      .mockReturnValueOnce(null) // network-configuration
       .mockReturnValueOnce("amazon-ecs-run-task-for-github-actions"); // started-by
 
     process.env = Object.assign(process.env, { GITHUB_WORKSPACE: __dirname });
@@ -138,6 +140,7 @@ describe("Deploy to ECS", () => {
     );
     expect(mockRunTasks).toHaveBeenNthCalledWith(1, {
       cluster: "cluster-789",
+      launchType: "EC2",
       taskDefinition: "task:def:arn",
       count: "1",
       startedBy: "amazon-ecs-run-task-for-github-actions",
@@ -154,6 +157,8 @@ describe("Deploy to ECS", () => {
       .mockReturnValueOnce("task-definition.json") // task-definition
       .mockReturnValueOnce("cluster-789") // cluster
       .mockReturnValueOnce("1") // count
+      .mockReturnValueOnce("EC2") // launch-type
+      .mockReturnValueOnce(null) // network-configuration
       .mockReturnValueOnce("amazon-ecs-run-task-for-github-actions") // started-by
       .mockReturnValueOnce("true"); // wait-for-finish
 

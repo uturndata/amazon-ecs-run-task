@@ -6,11 +6,14 @@ const fs = require("fs");
 
 // Attributes that are returned by DescribeTaskDefinition, but are not valid RegisterTaskDefinition inputs
 const IGNORED_TASK_DEFINITION_ATTRIBUTES = [
-  "compatibilities",
-  "taskDefinitionArn",
-  "requiresAttributes",
-  "revision",
-  "status",
+  'compatibilities',
+  'taskDefinitionArn',
+  'requiresAttributes',
+  'revision',
+  'status',
+  'registeredAt',
+  'deregisteredAt',
+  'registeredBy'
 ];
 
 const WAIT_DEFAULT_DELAY_SEC = 5;
@@ -87,16 +90,15 @@ async function run() {
     });
 
     // Get inputs
-    const taskDefinitionFile = core.getInput("task-definition", {
-      required: true,
-    });
-    const cluster = core.getInput("cluster", { required: false });
-    const count = core.getInput("count", { required: true });
-    const startedBy = core.getInput("started-by", { required: false }) || agent;
-    const waitForFinish =
-      core.getInput("wait-for-finish", { required: false }) || false;
-    let waitForMinutes =
-      parseInt(core.getInput("wait-for-minutes", { required: false })) || 30;
+    const taskDefinitionFile = core.getInput('task-definition', { required: true });
+    const cluster = core.getInput('cluster', { required: false });
+    const count = core.getInput('count', { required: true });
+    const launchType = core.getInput('launch-type', { required: false }) || "EC2";
+    const networkConfig = core.getInput('network-configuration', { required: false }) || null;
+    const startedBy = core.getInput('started-by', { required: false }) || agent;
+    const waitForFinish = core.getInput('wait-for-finish', { required: false }) || false;
+
+    let waitForMinutes = parseInt(core.getInput('wait-for-minutes', { required: false })) || 30;
     if (waitForMinutes > MAX_WAIT_MINUTES) {
       waitForMinutes = MAX_WAIT_MINUTES;
     }
@@ -125,29 +127,27 @@ async function run() {
       throw error;
     }
     const taskDefArn = registerResponse.taskDefinition.taskDefinitionArn;
-    core.setOutput("task-definition-arn", taskDefArn);
+    core.setOutput('task-definition-arn', taskDefArn);
 
-    const clusterName = cluster ? cluster : "default";
+    const clusterName = cluster ? cluster : 'default';
 
-    core.debug(
-      `Running task with ${JSON.stringify({
-        cluster: clusterName,
-        taskDefinition: taskDefArn,
-        count: count,
-        startedBy: startedBy,
-      })}`
-    );
+    const clusterParams = {
+      cluster: clusterName,
+      launchType: launchType,
+      taskDefinition: taskDefArn,
+      count: count,
+      startedBy: startedBy
+    }
 
-    const runTaskResponse = await ecs
-      .runTask({
-        cluster: clusterName,
-        taskDefinition: taskDefArn,
-        count: count,
-        startedBy: startedBy,
-      })
-      .promise();
+    if (networkConfig) {
+      clusterParams.networkConfiguration = JSON.parse(networkConfig);
+    }
 
-    core.debug(`Run task response ${JSON.stringify(runTaskResponse)}`);
+    core.debug(`Running task with ${JSON.stringify(clusterParams)}`)
+
+    const runTaskResponse = await ecs.runTask(clusterParams).promise();
+
+    core.debug(`Run task response ${JSON.stringify(runTaskResponse)}`)
 
     if (runTaskResponse.failures && runTaskResponse.failures.length > 0) {
       const failure = runTaskResponse.failures[0];
@@ -175,24 +175,19 @@ async function waitForTasksStopped(ecs, clusterName, taskArns, waitForMinutes) {
 
   const maxAttempts = (waitForMinutes * 60) / WAIT_DEFAULT_DELAY_SEC;
 
-  core.debug("Waiting for tasks to stop");
+  core.debug('Waiting for tasks to stop');
 
-  const waitTaskResponse = await ecs
-    .waitFor("tasksStopped", {
-      cluster: clusterName,
-      tasks: taskArns,
-      $waiter: {
-        delay: WAIT_DEFAULT_DELAY_SEC,
-        maxAttempts: maxAttempts,
-      },
-    })
-    .promise();
+  const waitTaskResponse = await ecs.waitFor('tasksStopped', {
+    cluster: clusterName,
+    tasks: taskArns,
+    $waiter: {
+      delay: WAIT_DEFAULT_DELAY_SEC,
+      maxAttempts: maxAttempts
+    }
+  }).promise();
 
-  core.debug(`Run task response ${JSON.stringify(waitTaskResponse)}`);
-
-  core.info(
-    `All tasks have stopped. Watch progress in the Amazon ECS console: https://console.aws.amazon.com/ecs/home?region=${aws.config.region}#/clusters/${clusterName}/tasks`
-  );
+  core.debug(`Run task response ${JSON.stringify(waitTaskResponse)}`)
+  core.info(`All tasks have stopped. Watch progress in the Amazon ECS console: https://console.aws.amazon.com/ecs/home?region=${aws.config.region}#/clusters/${clusterName}/tasks`);
 }
 
 async function tasksExitCode(ecs, clusterName, taskArns) {
