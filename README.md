@@ -21,7 +21,7 @@ Runs an Amazon ECS task on ECS cluster.
 
 ```yaml
     - name: Run Task on Amazon ECS
-      uses: smitp/amazon-ecs-run-task@v1
+      uses: uturndata/amazon-ecs-run-task@v1
       with:
         task-definition: task-definition.json
         cluster: my-cluster
@@ -94,7 +94,7 @@ The task definition file can be updated prior to deployment with the new contain
         image: ${{ steps.build-image.outputs.image }}
 
     - name: Run Task on Amazon ECS
-      uses: smitp/amazon-ecs-run-task@v1
+      uses: uturndata/amazon-ecs-run-task@v1
       with:
         task-definition: task-definition.json
         cluster: my-cluster
@@ -166,4 +166,6 @@ This action emits debug logs to help troubleshoot deployment failures.  To see t
 
 ## License Summary
 
-This code is made available under the MIT license.
+This code is forked from (https://github.com/smitp/amazon-ecs-run-task)[https://github.com/smitp/amazon-ecs-run-task] which is available under the MIT license.
+
+All modifications are made available under the MIT license.

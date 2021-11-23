@@ -10,7 +10,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/aws-actions/amazon-ecs-deploy-task-definition.git"
+    "url": "git+https://github.com/uturndata/amazon-ecs-run-task"
   },
   "keywords": [
     "AWS",
@@ -18,12 +18,12 @@
     "Actions",
     "JavaScript"
   ],
-  "author": "AWS",
+  "author": "Uturn Data Solutions",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/aws-actions/amazon-ecs-deploy-task-definition/issues"
+    "url": "https://github.com/uturndata/amazon-ecs-run-task/issues"
   },
-  "homepage": "https://github.com/aws-actions/amazon-ecs-deploy-task-definition#readme",
+  "homepage": "https://github.com/uturndata/amazon-ecs-run-task",
   "dependencies": {
     "@actions/core": "^1.2.6",
     "aws-sdk": "^2.710.0",
