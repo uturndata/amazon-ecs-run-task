@@ -1,6 +1,6 @@
-name: 'Amazon ECS "Run Task" Action for GitHub Actions'
+name: 'Amazon ECS "Run Task" Action'
 author: "Uturn Data Solutions"
-description: "Runs a standalone Amazon ECS task"
+description: "Runs a standalone Amazon ECS task (EC2 or Fargate)"
 branding:
   icon: "cloud"
   color: "blue"

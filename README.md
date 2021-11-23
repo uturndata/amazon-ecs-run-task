@@ -2,6 +2,8 @@
 
 Runs an Amazon ECS task on ECS cluster.
 
+Supports Fargate through the use of `launch-type` and `network-configuration`
+
 **Table of Contents**
 
 <!-- toc -->
@@ -121,41 +123,38 @@ This action requires the following minimum set of permissions:
 
 ```json
 {
-   "Version":"2012-10-17",
-   "Statement":[
-      {
-         "Sid":"RegisterTaskDefinition",
-         "Effect":"Allow",
-         "Action":[
-            "ecs:RegisterTaskDefinition"
-         ],
-         "Resource":"*"
-      },
-      {
-         "Sid":"PassRolesInTaskDefinition",
-         "Effect":"Allow",
-         "Action":[
-            "iam:PassRole"
-         ],
-         "Resource":[
-            "arn:aws:iam::<aws_account_id>:role/<task_definition_task_role_name>",
-            "arn:aws:iam::<aws_account_id>:role/<task_definition_task_execution_role_name>"
-         ]
-      },
-      {
-         "Sid": "RunTask",
-         "Effect": "Allow",
-         "Action": "ecs:RunTask",
-         "Resource": "arn:aws:ecs:<region>:<aws_account_id>:task-definition/*:*"
-      },
-      {
-         "Sid": "DescribeTasks",
-         "Effect": "Allow",
-         "Action": "ecs:DescribeTasks",
-         "Resource": "arn:aws:ecs:<region>:<aws_account_id>:task/*"
-      }
-   ]
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "RegisterTaskDefinition",
+      "Effect": "Allow",
+      "Action": ["ecs:RegisterTaskDefinition"],
+      "Resource": "*"
+    },
+    {
+      "Sid": "PassRolesInTaskDefinition",
+      "Effect": "Allow",
+      "Action": ["iam:PassRole"],
+      "Resource": [
+        "arn:aws:iam::<aws_account_id>:role/<task_definition_task_role_name>",
+        "arn:aws:iam::<aws_account_id>:role/<task_definition_task_execution_role_name>"
+      ]
+    },
+    {
+      "Sid": "RunTask",
+      "Effect": "Allow",
+      "Action": "ecs:RunTask",
+      "Resource": "arn:aws:ecs:<region>:<aws_account_id>:task-definition/*:*"
+    },
+    {
+      "Sid": "DescribeTasks",
+      "Effect": "Allow",
+      "Action": "ecs:DescribeTasks",
+      "Resource": "arn:aws:ecs:<region>:<aws_account_id>:task/*"
+    }
+  ]
 }
+
 ```
 
 Note: the policy above assumes the account has opted in to the ECS long ARN format.
