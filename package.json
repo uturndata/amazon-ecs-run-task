@@ -1,7 +1,7 @@
 {
-  "name": "aws-actions-amazon-ecs-deploy-task-definition",
-  "version": "1.3.5",
-  "description": "Registers an Amazon ECS task definition and deploys it to an ECS service.",
+  "name": "amazon-ecs-run-task",
+  "version": "1.3.6",
+  "description": "Runs a standalone Amazon ECS task",
   "main": "index.js",
   "scripts": {
     "lint": "eslint **.js",
@@ -14,6 +14,8 @@
   },
   "keywords": [
     "AWS",
+    "ECS",
+    "RunTask",
     "GitHub",
     "Actions",
     "JavaScript"
@@ -25,13 +27,13 @@
   },
   "homepage": "https://github.com/uturndata/amazon-ecs-run-task",
   "dependencies": {
-    "@actions/core": "^1.2.6",
-    "aws-sdk": "^2.710.0",
-    "yaml": "^1.10.0"
+    "@actions/core": "^1.6.0",
+    "aws-sdk": "^2.1034.0",
+    "yaml": "^1.10.2"
   },
   "devDependencies": {
-    "@zeit/ncc": "^0.22.3",
-    "eslint": "^7.4.0",
-    "jest": "^26.4.2"
+    "@vercel/ncc": "^0.32.0",
+    "eslint": "^8.3.0",
+    "jest": "^27.3.1"
   }
 }
