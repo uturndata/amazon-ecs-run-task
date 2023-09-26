@@ -1,24 +1,27 @@
+name: Package
+
 on:
   push:
     branches:
       - main
 
-name: Package
-
 jobs:
   check:
     name: Package distribution file
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
+
     steps:
     - name: Checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
       with:
         ref: main
+
     - name: Package
       run: |
         npm ci
         npm test
         npm run package
+
     - name: Commit
       run: |
         git config --global user.name "GitHub Actions"
