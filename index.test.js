@@ -1,19 +1,22 @@
-const run = require(".");
-const core = require("@actions/core");
-const fs = require("fs");
-const path = require("path");
+const run = require('.');
+const core = require('@actions/core');
+const fs = require('fs');
+const path = require('path');
 
-jest.mock("@actions/core");
-jest.mock("fs");
+jest.mock('@actions/core');
+jest.mock('fs', () => ({
+  promises: { access: jest.fn() },
+  readFileSync: jest.fn(),
+}));
 
 const mockEcsRegisterTaskDef = jest.fn();
 const mockEcsDescribeTasks = jest.fn();
 const mockRunTasks = jest.fn();
 const mockEcsWaiter = jest.fn();
-jest.mock("aws-sdk", () => {
+jest.mock('aws-sdk', () => {
   return {
     config: {
-      region: "fake-region",
+      region: 'fake-region',
     },
     ECS: jest.fn(() => ({
       registerTaskDefinition: mockEcsRegisterTaskDef,
@@ -24,31 +27,31 @@ jest.mock("aws-sdk", () => {
   };
 });
 
-describe("Deploy to ECS", () => {
+describe('Deploy to ECS', () => {
   beforeEach(() => {
     jest.clearAllMocks();
 
     core.getInput = jest
       .fn()
-      .mockReturnValueOnce("task-definition.json") // task-definition
-      .mockReturnValueOnce("cluster-789") // cluster
-      .mockReturnValueOnce("1") // count
-      .mockReturnValueOnce("EC2") // launch-type
+      .mockReturnValueOnce('task-definition.json') // task-definition
+      .mockReturnValueOnce('cluster-789') // cluster
+      .mockReturnValueOnce('1') // count
+      .mockReturnValueOnce('EC2') // launch-type
       .mockReturnValueOnce(null) // network-configuration
-      .mockReturnValueOnce("amazon-ecs-run-task-for-github-actions"); // started-by
+      .mockReturnValueOnce('amazon-ecs-run-task-for-github-actions'); // started-by
 
     process.env = Object.assign(process.env, { GITHUB_WORKSPACE: __dirname });
 
     fs.readFileSync.mockImplementation((pathInput, encoding) => {
-      if (encoding != "utf8") {
+      if (encoding != 'utf8') {
         throw new Error(`Wrong encoding ${encoding}`);
       }
 
       if (
         pathInput ==
-        path.join(process.env.GITHUB_WORKSPACE, "task-definition.json")
+        path.join(process.env.GITHUB_WORKSPACE, 'task-definition.json')
       ) {
-        return JSON.stringify({ family: "task-def-family" });
+        return JSON.stringify({ family: 'task-def-family' });
       }
 
       throw new Error(`Unknown path ${pathInput}`);
@@ -61,7 +64,7 @@ describe("Deploy to ECS", () => {
       return {
         promise() {
           return Promise.resolve({
-            taskDefinition: { taskDefinitionArn: "task:def:arn" },
+            taskDefinition: { taskDefinitionArn: 'task:def:arn' },
           });
         },
       };
@@ -76,15 +79,15 @@ describe("Deploy to ECS", () => {
               {
                 containers: [
                   {
-                    lastStatus: "RUNNING",
+                    lastStatus: 'RUNNING',
                     exitCode: 0,
-                    reason: "",
-                    taskArn: "arn:aws:ecs:fake-region:account_id:task/arn",
+                    reason: '',
+                    taskArn: 'arn:aws:ecs:fake-region:account_id:task/arn',
                   },
                 ],
-                desiredStatus: "RUNNING",
-                lastStatus: "RUNNING",
-                taskArn: "arn:aws:ecs:fake-region:account_id:task/arn",
+                desiredStatus: 'RUNNING',
+                lastStatus: 'RUNNING',
+                taskArn: 'arn:aws:ecs:fake-region:account_id:task/arn',
               },
             ],
           });
@@ -101,16 +104,16 @@ describe("Deploy to ECS", () => {
               {
                 containers: [
                   {
-                    lastStatus: "RUNNING",
+                    lastStatus: 'RUNNING',
                     exitCode: 0,
-                    reason: "",
-                    taskArn: "arn:aws:ecs:fake-region:account_id:task/arn",
+                    reason: '',
+                    taskArn: 'arn:aws:ecs:fake-region:account_id:task/arn',
                   },
                 ],
-                desiredStatus: "RUNNING",
-                lastStatus: "RUNNING",
-                taskArn: "arn:aws:ecs:fake-region:account_id:task/arn",
-                // taskDefinitionArn: "arn:aws:ecs:<region>:<aws_account_id>:task-definition/amazon-ecs-sample:1"
+                desiredStatus: 'RUNNING',
+                lastStatus: 'RUNNING',
+                taskArn: 'arn:aws:ecs:fake-region:account_id:task/arn',
+                // taskDefinitionArn: 'arn:aws:ecs:<region>:<aws_account_id>:task-definition/amazon-ecs-sample:1'
               },
             ],
           });
@@ -127,65 +130,65 @@ describe("Deploy to ECS", () => {
     });
   });
 
-  test("registers the task definition contents and runs the task", async () => {
+  test('registers the task definition contents and runs the task', async () => {
     await run();
     expect(core.setFailed).toHaveBeenCalledTimes(0);
     expect(mockEcsRegisterTaskDef).toHaveBeenNthCalledWith(1, {
-      family: "task-def-family",
+      family: 'task-def-family',
     });
     expect(core.setOutput).toHaveBeenNthCalledWith(
       1,
-      "task-definition-arn",
-      "task:def:arn"
+      'task-definition-arn',
+      'task:def:arn'
     );
     expect(mockRunTasks).toHaveBeenNthCalledWith(1, {
-      cluster: "cluster-789",
-      launchType: "EC2",
-      taskDefinition: "task:def:arn",
-      count: "1",
-      startedBy: "amazon-ecs-run-task-for-github-actions",
+      cluster: 'cluster-789',
+      launchType: 'EC2',
+      taskDefinition: 'task:def:arn',
+      count: '1',
+      startedBy: 'amazon-ecs-run-task-for-github-actions',
     });
     expect(mockEcsWaiter).toHaveBeenCalledTimes(0);
-    expect(core.setOutput).toBeCalledWith("task-arn", [
-      "arn:aws:ecs:fake-region:account_id:task/arn",
+    expect(core.setOutput).toBeCalledWith('task-arn', [
+      'arn:aws:ecs:fake-region:account_id:task/arn',
     ]);
   });
 
-  test("registers the task definition contents and waits for tasks to finish successfully", async () => {
+  test('registers the task definition contents and waits for tasks to finish successfully', async () => {
     core.getInput = jest
       .fn()
-      .mockReturnValueOnce("task-definition.json") // task-definition
-      .mockReturnValueOnce("cluster-789") // cluster
-      .mockReturnValueOnce("1") // count
-      .mockReturnValueOnce("EC2") // launch-type
+      .mockReturnValueOnce('task-definition.json') // task-definition
+      .mockReturnValueOnce('cluster-789') // cluster
+      .mockReturnValueOnce('1') // count
+      .mockReturnValueOnce('EC2') // launch-type
       .mockReturnValueOnce(null) // network-configuration
-      .mockReturnValueOnce("amazon-ecs-run-task-for-github-actions") // started-by
-      .mockReturnValueOnce("true"); // wait-for-finish
+      .mockReturnValueOnce('amazon-ecs-run-task-for-github-actions') // started-by
+      .mockReturnValueOnce('true'); // wait-for-finish
 
     await run();
     expect(core.setFailed).toHaveBeenCalledTimes(0);
 
     expect(mockEcsRegisterTaskDef).toHaveBeenNthCalledWith(1, {
-      family: "task-def-family",
+      family: 'task-def-family',
     });
     expect(core.setOutput).toHaveBeenNthCalledWith(
       1,
-      "task-definition-arn",
-      "task:def:arn"
+      'task-definition-arn',
+      'task:def:arn'
     );
     expect(mockEcsDescribeTasks).toHaveBeenNthCalledWith(1, {
-      cluster: "cluster-789",
-      tasks: ["arn:aws:ecs:fake-region:account_id:task/arn"],
+      cluster: 'cluster-789',
+      tasks: ['arn:aws:ecs:fake-region:account_id:task/arn'],
     });
 
     expect(mockEcsWaiter).toHaveBeenCalledTimes(1);
 
-    expect(core.info).toBeCalledWith("All tasks have exited successfully.");
+    expect(core.info).toBeCalledWith('All tasks have exited successfully.');
   });
 
-  test("cleans null keys out of the task definition contents", async () => {
+  test('cleans null keys out of the task definition contents', async () => {
     fs.readFileSync.mockImplementation((pathInput, encoding) => {
-      if (encoding != "utf8") {
+      if (encoding != 'utf8') {
         throw new Error(`Wrong encoding ${encoding}`);
       }
 
@@ -195,13 +198,13 @@ describe("Deploy to ECS", () => {
     await run();
     expect(core.setFailed).toHaveBeenCalledTimes(0);
     expect(mockEcsRegisterTaskDef).toHaveBeenNthCalledWith(1, {
-      family: "task-def-family",
+      family: 'task-def-family',
     });
   });
 
-  test("cleans empty arrays out of the task definition contents", async () => {
+  test('cleans empty arrays out of the task definition contents', async () => {
     fs.readFileSync.mockImplementation((pathInput, encoding) => {
-      if (encoding != "utf8") {
+      if (encoding != 'utf8') {
         throw new Error(`Wrong encoding ${encoding}`);
       }
 
@@ -211,45 +214,45 @@ describe("Deploy to ECS", () => {
     await run();
     expect(core.setFailed).toHaveBeenCalledTimes(0);
     expect(mockEcsRegisterTaskDef).toHaveBeenNthCalledWith(1, {
-      family: "task-def-family",
+      family: 'task-def-family',
     });
   });
 
-  test("cleans empty strings and objects out of the task definition contents", async () => {
+  test('cleans empty strings and objects out of the task definition contents', async () => {
     fs.readFileSync.mockImplementation((pathInput, encoding) => {
-      if (encoding != "utf8") {
+      if (encoding != 'utf8') {
         throw new Error(`Wrong encoding ${encoding}`);
       }
 
       return `
             {
-                "memory": "",
-                "containerDefinitions": [ {
-                    "name": "sample-container",
-                    "logConfiguration": {},
-                    "repositoryCredentials": { "credentialsParameter": "" },
-                    "command": [
-                        ""
+                'memory': '',
+                'containerDefinitions': [ {
+                    'name': 'sample-container',
+                    'logConfiguration': {},
+                    'repositoryCredentials': { 'credentialsParameter': '' },
+                    'command': [
+                        ''
                     ],
-                    "environment": [
+                    'environment': [
                         {
-                            "name": "hello",
-                            "value": "world"
+                            'name': 'hello',
+                            'value': 'world'
                         },
                         {
-                            "name": "",
-                            "value": ""
+                            'name': '',
+                            'value': ''
                         }
                     ],
-                    "secretOptions": [ {
-                        "name": "",
-                        "valueFrom": ""
+                    'secretOptions': [ {
+                        'name': '',
+                        'valueFrom': ''
                     } ],
-                    "cpu": 0,
-                    "essential": false
+                    'cpu': 0,
+                    'essential': false
                 } ],
-                "requiresCompatibilities": [ "EC2" ],
-                "family": "task-def-family"
+                'requiresCompatibilities': [ 'EC2' ],
+                'family': 'task-def-family'
             }
             `;
     });
@@ -257,27 +260,27 @@ describe("Deploy to ECS", () => {
     await run();
     expect(core.setFailed).toHaveBeenCalledTimes(0);
     expect(mockEcsRegisterTaskDef).toHaveBeenNthCalledWith(1, {
-      family: "task-def-family",
+      family: 'task-def-family',
       containerDefinitions: [
         {
-          name: "sample-container",
+          name: 'sample-container',
           cpu: 0,
           essential: false,
           environment: [
             {
-              name: "hello",
-              value: "world",
+              name: 'hello',
+              value: 'world',
             },
           ],
         },
       ],
-      requiresCompatibilities: ["EC2"],
+      requiresCompatibilities: ['EC2'],
     });
   });
 
-  test("cleans invalid keys out of the task definition contents", async () => {
+  test('cleans invalid keys out of the task definition contents', async () => {
     fs.readFileSync.mockImplementation((pathInput, encoding) => {
-      if (encoding != "utf8") {
+      if (encoding != 'utf8') {
         throw new Error(`Wrong encoding ${encoding}`);
       }
 
@@ -287,13 +290,13 @@ describe("Deploy to ECS", () => {
     await run();
     expect(core.setFailed).toHaveBeenCalledTimes(0);
     expect(mockEcsRegisterTaskDef).toHaveBeenNthCalledWith(1, {
-      family: "task-def-family",
+      family: 'task-def-family',
     });
   });
 
-  test("error is caught if task def registration fails", async () => {
+  test('error is caught if task def registration fails', async () => {
     mockEcsRegisterTaskDef.mockImplementation(() => {
-      throw new Error("Could not parse");
+      throw new Error('Could not parse');
     });
 
     await run();
@@ -301,8 +304,8 @@ describe("Deploy to ECS", () => {
     expect(core.setFailed).toHaveBeenCalledTimes(2);
     expect(core.setFailed).toHaveBeenNthCalledWith(
       1,
-      "Failed to register task definition in ECS: Could not parse"
+      'Failed to register task definition in ECS: Could not parse'
     );
-    expect(core.setFailed).toHaveBeenNthCalledWith(2, "Could not parse");
+    expect(core.setFailed).toHaveBeenNthCalledWith(2, 'Could not parse');
   });
 });
